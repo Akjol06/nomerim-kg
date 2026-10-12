@@ -324,7 +324,7 @@ $('letters').addEventListener('input', (e) => {
   if (e.target.value.length === 3) e.target.blur();
 });
 $('text').addEventListener('input', (e) => {
-  latinOnly(e.target, /[^A-Z0-9 ]/g, (v) => v.replace(/^ +/, '').replace(/ {2,}/g, ' ').slice(0, 7));
+  latinOnly(e.target, /[^A-Z0-9 ]/g, (v) => v.slice(0, 7)); // всего 7 символов вместе с пробелами
 });
 
 // ---------- Рисование номера (размер 520×112 мм, масштаб 2) ----------
@@ -428,16 +428,22 @@ const PLATE_TYPES = [
     name: { ky: 'Аттуу номер', ru: 'Именной' },
     hint: { ky: '7 белгиге чейин', ru: 'до 7 знаков' },
     sample: { text: 'NOMERIM' },
-    valid: (v) => /^[A-Z0-9 ]{1,7}$/.test(v.text) && /[A-Z0-9]/.test(v.text),
-    label: (v) => v.text,
+    // 1–7 символов вместе с пробелами; можно одни пробелы — тогда правое поле пустое
+    valid: (v) => /^[A-Z0-9 ]{1,7}$/.test(v.text),
+    label: (v) => v.text.trim(),
     draw(ctx, { region, text }) {
       frame(ctx, this.w, this.h, 140);
       leftBlock(ctx, region);
-      // правый блок: текст до 75 мм по центру; длинный — уменьшается целиком, чтобы влезть
+      // пробелы считаются и видны: в начале/конце сдвигают надпись, внутри — раздвигают
+      const body = text.trim();
+      if (!body) return;
+      const lead = text.length - text.trimStart().length, trail = text.length - text.trimEnd().length;
       const k = kFor(ctx, '5555', 203, 75), maxW = 330;
-      const w75 = measure(ctx, text, 75, FONT_DATA).width * k;
-      const h = w75 > maxW ? 75 * maxW / w75 : 75;
-      boxText(ctx, text, { h, base: 56 + h / 2, cx: 327, k, font: FONT_DATA });
+      const spaceW = (hh) => { measure(ctx, ' ', hh, FONT_DATA); return ctx.measureText(' ').width * k; };
+      const full = (hh) => measure(ctx, body, hh, FONT_DATA).width * k + (lead + trail) * spaceW(hh);
+      const h = full(75) > maxW ? 75 * maxW / full(75) : 75;
+      const cx = 327 + (lead - trail) * spaceW(h) / 2;
+      boxText(ctx, body, { h, base: 56 + h / 2, cx, k, font: FONT_DATA });
     },
   },
 ];
@@ -477,7 +483,7 @@ function buildTypes() {
 const values = () => ({
   digits: $('digits').value,
   letters: $('letters').value,
-  text: $('text').value.trim().replace(/ +/g, ' '),
+  text: $('text').value,
 });
 const isValid = () => currentType().valid(values());
 
@@ -508,7 +514,7 @@ $('form').addEventListener('submit', (e) => { e.preventDefault(); document.activ
 $('download').addEventListener('click', () => {
   if (!isValid()) return;
   const a = document.createElement('a');
-  const name = currentType().label(values()).replace(/ /g, '');
+  const name = currentType().label(values()).replace(/ /g, '') || 'bosh';
   a.download = `nomerim-${$('region').value}-${name}.png`;
   a.href = $('plate').toDataURL('image/png');
   a.click();
