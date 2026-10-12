@@ -1,0 +1,524 @@
+<!doctype html>
+<html lang="ky">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Номерим — номер кандай болорун көрүңүз</title>
+<meta name="description" content="Номерим: аймакты, 3 сан жана 3 тамганы тандап, мамлекеттик номер кандай көрүнөрүн көрүңүз. Посмотрите, как будет выглядеть ваш госномер KG.">
+<link rel="canonical" href="https://nomerim.kg/">
+<link rel="icon" href="img/favicon.svg" type="image/svg+xml">
+<meta name="theme-color" content="#ffffff">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Номерим">
+<meta property="og:url" content="https://nomerim.kg/">
+<meta property="og:title" content="Номерим — номер кандай болорун көрүңүз">
+<meta property="og:description" content="Аймакты, сан жана тамгаларды тандап, мамлекеттик номер кандай көрүнөрүн көрүңүз. Посмотрите, как будет выглядеть ваш госномер KG.">
+<meta property="og:locale" content="ky_KG">
+<meta property="og:locale:alternate" content="ru_RU">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  /* копия Euro Plate с целым нулём (без среза) — для цифр и текста номера */
+  @font-face {
+    font-family: 'Euro Plate Data';
+    src: url('fonts/EuroPlate-Data.ttf') format('truetype');
+    font-weight: normal; font-style: normal; font-display: block;
+  }
+  @font-face {
+    font-family: 'Euro Plate';
+    src: url('fonts/EuroPlate.ttf') format('truetype');
+    font-weight: normal; font-style: normal; font-display: block;
+  }
+  :root {
+    --bg: #f3f4f6;
+    --card: #ffffff;
+    --text: #111827;
+    --muted: #6b7280;
+    --line: #e5e7eb;
+    --accent: #d4111f;
+    --accent-dark: #a50d18;
+    --radius: 14px;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: Inter, system-ui, -apple-system, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+  }
+  header {
+    background: var(--card);
+    border-bottom: 1px solid var(--line);
+  }
+  .wrap { max-width: 880px; margin: 0 auto; padding: 0 16px; }
+  .top {
+    display: flex; align-items: center; justify-content: space-between;
+    height: 64px;
+  }
+  .logo { display: flex; align-items: center; gap: 10px; font-weight: 600; font-size: 18px; }
+  .logo-mark {
+    width: 34px; height: 34px; border-radius: 8px; background: var(--accent);
+    color: #fff; display: grid; place-items: center; font-family: 'Euro Plate'; font-weight: 400;
+  }
+  .lang { display: flex; gap: 4px; }
+  .lang button {
+    border: 1px solid var(--line); background: transparent; border-radius: 8px;
+    padding: 6px 10px; font: inherit; font-size: 13px; cursor: pointer; color: var(--muted);
+  }
+  .lang button.active { background: var(--text); color: #fff; border-color: var(--text); }
+
+  main { flex: 1; padding: 28px 0 40px; }
+  h1 { font-size: 30px; margin: 0 0 8px; letter-spacing: -0.02em; }
+  .lead { color: var(--muted); margin: 0 0 28px; }
+
+  .card {
+    background: var(--card); border: 1px solid var(--line); border-radius: var(--radius);
+    padding: 24px;
+  }
+  form { display: grid; grid-template-columns: 1.6fr 1fr 1fr; gap: 12px; align-items: end; }
+  form .f-text { display: none; }
+  form[data-type="named"] { grid-template-columns: 1.6fr 2fr; }
+  form[data-type="named"] .f-text { display: block; }
+  form[data-type="named"] > div:nth-child(2), form[data-type="named"] > div:nth-child(3) { display: none; }
+  label { display: block; font-size: 13px; font-weight: 500; color: var(--muted); margin-bottom: 6px; }
+  select, input {
+    width: 100%; height: 52px; border: 1px solid var(--line); border-radius: 10px;
+    padding: 0 14px; font-family: 'Euro Plate Data', 'Euro Plate', sans-serif; font-weight: 400;
+    font-size: 24px; letter-spacing: 0.12em; text-transform: uppercase;
+    background: #fff; color: var(--text); outline: none;
+  }
+  select { font-size: 16px; letter-spacing: 0; text-transform: none; font-family: Inter, sans-serif; font-weight: 500; }
+  select:focus, input:focus { border-color: var(--text); box-shadow: 0 0 0 3px rgba(17,24,39,.08); }
+  input.invalid { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(212,17,31,.12); }
+  .btn {
+    height: 52px; padding: 0 26px; border: 0; border-radius: 10px; background: var(--accent);
+    color: #fff; font: inherit; font-weight: 600; font-size: 16px; cursor: pointer; white-space: nowrap;
+  }
+  .btn:hover { background: var(--accent-dark); }
+  .btn.ghost { background: transparent; color: var(--text); border: 1px solid var(--line); }
+  .btn.ghost:hover { background: var(--bg); }
+  .types-label { font-size: 13px; font-weight: 500; color: var(--muted); margin: 0 0 8px; }
+  .types { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; margin-bottom: 20px; }
+  .type {
+    position: relative; border: 1px solid var(--line); border-radius: 12px; padding: 14px 12px 12px;
+    cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 10px;
+    background: #fff; transition: border-color .15s, box-shadow .15s;
+  }
+  .type:hover { border-color: #c9ccd2; }
+  .type input { position: absolute; opacity: 0; pointer-events: none; }
+  .type:has(input:checked) { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(212,17,31,.12); }
+  .type:has(input:focus-visible) { outline: 2px solid var(--text); outline-offset: 2px; }
+  .type-thumb { height: 48px; display: grid; place-items: center; }
+  .type-thumb canvas { max-height: 48px; max-width: 100%; filter: drop-shadow(0 2px 4px rgba(0,0,0,.15)); }
+  .type-name { font-size: 14px; font-weight: 600; text-align: center; }
+  .type-size { font-size: 12px; color: var(--muted); margin-top: -6px; }
+  .error { color: var(--accent); font-size: 14px; min-height: 20px; margin: 12px 0 0; }
+
+  .preview { margin-bottom: 20px; }
+  .plate-stage {
+    background: linear-gradient(180deg, #e9ebef, #d9dce2);
+    border-radius: var(--radius); padding: 24px; display: grid; place-items: center;
+  }
+  #plate {
+    width: 100%; max-width: 640px; height: auto;
+    filter: drop-shadow(0 10px 18px rgba(0,0,0,.18));
+  }
+  .result-text { font-size: 15px; color: var(--muted); text-align: center; margin-top: 12px; }
+  #regionName, #plateText { white-space: nowrap; }
+  .result-text b { color: var(--text); font-family: 'Euro Plate Data', 'Euro Plate'; font-weight: 400; font-size: 20px; letter-spacing: .06em; }
+  .preview.is-sample #plate { opacity: .55; }
+  #download { width: 100%; margin-top: 4px; }
+  #download:disabled { background: #e5e7eb; color: #9ca3af; cursor: default; }
+
+  footer { color: var(--muted); font-size: 13px; padding: 20px 0; border-top: 1px solid var(--line); background: var(--card); }
+
+  .type { min-width: 0; }
+  input, select { min-width: 0; }
+
+  @media (max-width: 720px) {
+    h1 { font-size: 24px; }
+    .types { gap: 8px; }
+    .type { padding: 10px 6px; }
+    .type-thumb { height: 44px; }
+    .type-thumb canvas { max-height: 44px; }
+    .type-name { font-size: 12px; }
+    .plate-stage { padding: 24px 12px; }
+  }
+
+  /* Телефон: номер прилипает сверху, всё остальное компактно под ним */
+  @media (max-width: 480px) {
+    .top { height: 52px; }
+    .logo { font-size: 16px; }
+    .logo-mark { width: 30px; height: 30px; }
+    main { padding: 14px 0 24px; }
+    h1 { font-size: 20px; margin-bottom: 12px; }
+    .lead { display: none; }
+    .card { padding: 0 12px 14px; border-radius: 12px; }
+
+    .preview {
+      position: sticky; top: 0; z-index: 5;
+      margin: 0 -12px 12px; padding: 12px 12px 8px;
+      background: var(--card); border-radius: 12px 12px 0 0;
+      border-bottom: 1px solid var(--line);
+    }
+    .plate-stage { padding: 14px 8px; border-radius: 10px; }
+    #plate { filter: drop-shadow(0 4px 8px rgba(0,0,0,.18)); }
+    .result-text { font-size: 13px; margin-top: 6px; }
+    .result-text b { font-size: 16px; }
+
+    .types-label, label { font-size: 12px; margin-bottom: 4px; }
+    .types { margin-bottom: 12px; }
+    .type { padding: 8px 6px; gap: 6px; border-radius: 10px; }
+    .type-thumb { height: 34px; }
+    .type-thumb canvas { max-height: 34px; }
+    .type-name { font-size: 12px; line-height: 1.2; }
+    .type-size { font-size: 11px; margin-top: -4px; }
+
+    form { grid-template-columns: 1.3fr 1fr 1fr; gap: 8px; }
+    form[data-type="named"] { grid-template-columns: 1fr 2.6fr; }
+    select, input { height: 46px; padding: 0 10px; font-size: 20px; letter-spacing: .08em; }
+    select { font-size: 16px; padding: 0 6px; }
+    .error { font-size: 13px; min-height: 0; margin: 8px 0; }
+    .btn { height: 48px; }
+    footer { font-size: 12px; padding: 14px 0; }
+  }
+</style>
+</head>
+<body>
+<header>
+  <div class="wrap top">
+    <div class="logo"><span class="logo-mark">KG</span><span data-i18n="brand">Номерим</span></div>
+    <div class="lang">
+      <button type="button" data-lang="ky">KG</button>
+      <button type="button" data-lang="ru">RU</button>
+    </div>
+  </div>
+</header>
+
+<main>
+  <div class="wrap">
+    <h1 data-i18n="title">Номер конструктору</h1>
+    <p class="lead" data-i18n="lead">Номердин түрүн, аймакты тандап, сан жана тамгаларды териңиз — номер кандай болорун көрөсүз</p>
+
+    <div class="card">
+      <div class="preview" id="result">
+        <div class="plate-stage">
+          <canvas id="plate" aria-label="plate preview"></canvas>
+        </div>
+        <div class="result-text"><span id="plateLabel" data-i18n="sample">Мисал:</span> <b id="plateText"></b> · <span id="regionName"></span></div>
+      </div>
+
+      <p class="types-label" data-i18n="type">Номердин түрү</p>
+      <div class="types" id="types"></div>
+
+      <form id="form" data-type="standard" novalidate>
+        <div class="f-region">
+          <label for="region" data-i18n="region">Аймагы</label>
+          <select id="region"></select>
+        </div>
+        <div>
+          <label for="digits" data-i18n="digits">3 сан</label>
+          <input id="digits" maxlength="3" inputmode="numeric" autocomplete="off" placeholder="777">
+        </div>
+        <div>
+          <label for="letters" data-i18n="letters">3 тамга</label>
+          <input id="letters" maxlength="3" autocomplete="off" autocapitalize="characters" spellcheck="false" placeholder="ABC">
+        </div>
+        <div class="f-text">
+          <label for="text" data-i18n="text">Текст (7 белгиге чейин)</label>
+          <input id="text" maxlength="7" autocomplete="off" autocapitalize="characters" spellcheck="false" placeholder="NOMERIM">
+        </div>
+      </form>
+      <p class="error" id="error"></p>
+      <button class="btn" type="button" id="download" data-i18n="download">PNG жүктөө</button>
+    </div>
+  </div>
+</main>
+
+<footer>
+  <div class="wrap" data-i18n="footer">Бул сайт номердин сырткы көрүнүшүн гана көрсөтөт. Маалымат базасы жок.</div>
+</footer>
+
+<script>
+const REGIONS = [
+  { code: '01', ky: 'Бишкек ш.',      ru: 'г. Бишкек' },
+  { code: '02', ky: 'Ош ш.',          ru: 'г. Ош' },
+  { code: '03', ky: 'Баткен обл.',    ru: 'Баткенская обл.' },
+  { code: '04', ky: 'Жалал-Абад обл.', ru: 'Джалал-Абадская обл.' },
+  { code: '05', ky: 'Нарын обл.',     ru: 'Нарынская обл.' },
+  { code: '06', ky: 'Ош обл.',        ru: 'Ошская обл.' },
+  { code: '07', ky: 'Талас обл.',     ru: 'Таласская обл.' },
+  { code: '08', ky: 'Чүй обл.',       ru: 'Чуйская обл.' },
+  { code: '09', ky: 'Ысык-Көл обл.',  ru: 'Иссык-Кульская обл.' },
+];
+
+const I18N = {
+  ky: {
+    brand: 'Номерим', title: 'Номер конструктору',
+    lead: 'Номердин түрүн, аймакты тандап, сан жана тамгаларды териңиз — номер кандай болорун көрөсүз',
+    type: 'Номердин түрү',
+    region: 'Аймагы', digits: '3 сан', letters: '3 тамга', text: 'Текст (7 белгиге чейин)',
+    yourPlate: 'Сиздин номер:', sample: 'Мисал:', download: 'PNG жүктөө',
+    footer: 'Бул сайт номердин сырткы көрүнүшүн гана көрсөтөт. Маалымат базасы жок.',
+    errDigits: '3 сан териңиз (0–9)', errLetters: '3 латын тамгасын териңиз (A–Z)',
+  },
+  ru: {
+    brand: 'Номерим', title: 'Конструктор номера',
+    lead: 'Выберите вид номера и регион, введите цифры и буквы — и посмотрите, как будет выглядеть номер',
+    type: 'Вид номера',
+    region: 'Регион', digits: '3 цифры', letters: '3 буквы', text: 'Текст (до 7 знаков)',
+    yourPlate: 'Ваш номер:', sample: 'Пример:', download: 'Скачать PNG',
+    footer: 'Сайт только показывает, как будет выглядеть номер. Базы данных нет.',
+    errDigits: 'Введите 3 цифры (0–9)', errLetters: 'Введите 3 латинские буквы (A–Z)',
+  },
+};
+
+// Кириллица, похожая на латиницу, автоматически заменяется
+const CYR_TO_LAT = { 'А':'A','В':'B','Е':'E','К':'K','М':'M','Н':'H','О':'O','Р':'P','С':'C','Т':'T','У':'Y','Х':'X' };
+
+const $ = (id) => document.getElementById(id);
+let lang = 'ky';
+try { lang = localStorage.getItem('lang') || 'ky'; } catch {}
+
+function setLang(l) {
+  lang = l;
+  try { localStorage.setItem('lang', l); } catch {}
+  document.documentElement.lang = l;
+  document.querySelectorAll('[data-i18n]').forEach((el) => { el.textContent = I18N[l][el.dataset.i18n]; });
+  document.querySelectorAll('[data-lang]').forEach((b) => b.classList.toggle('active', b.dataset.lang === l));
+  const sel = $('region'); const cur = sel.value;
+  const short = window.matchMedia('(max-width: 480px)').matches;
+  sel.innerHTML = REGIONS.map((r) => `<option value="${r.code}">${short ? r.code : `${r.code} — ${r[l]}`}</option>`).join('');
+  if (cur) sel.value = cur;
+  document.querySelectorAll('[data-type-name]').forEach((el) => {
+    el.textContent = PLATE_TYPES.find((t) => t.id === el.dataset.typeName).name[l];
+  });
+  document.querySelectorAll('[data-type-hint]').forEach((el) => {
+    el.textContent = PLATE_TYPES.find((t) => t.id === el.dataset.typeHint).hint[l];
+  });
+  $('error').textContent = '';
+  showPlate();
+}
+
+document.querySelectorAll('[data-lang]').forEach((b) => b.addEventListener('click', () => setLang(b.dataset.lang)));
+
+$('digits').addEventListener('input', (e) => {
+  e.target.value = e.target.value.replace(/\D/g, '').slice(0, 3);
+  e.target.classList.remove('invalid');
+  if (e.target.value.length === 3) $('letters').focus();
+  showPlate();
+});
+$('letters').addEventListener('input', (e) => {
+  e.target.value = e.target.value.toUpperCase()
+    .replace(/./g, (c) => CYR_TO_LAT[c] || c)
+    .replace(/[^A-Z]/g, '').slice(0, 3);
+  e.target.classList.remove('invalid');
+  if (e.target.value.length === 3) e.target.blur();
+  showPlate();
+});
+$('text').addEventListener('input', (e) => {
+  e.target.value = e.target.value.toUpperCase()
+    .replace(/./g, (c) => CYR_TO_LAT[c] || c)
+    .replace(/[^A-Z0-9 ]/g, '').replace(/^ +/, '').replace(/ {2,}/g, ' ').slice(0, 7);
+  showPlate();
+});
+
+// ---------- Рисование номера (размер 520×112 мм, масштаб 2) ----------
+const S = 4;
+const FONT = '"Euro Plate", "Arial Narrow", sans-serif';
+const FONT_DATA = '"Euro Plate Data", "Euro Plate", "Arial Narrow", sans-serif'; // ноль без среза
+const W = 400;
+const INK = '#2b2b2b';
+
+function roundRect(ctx, x, y, w, h, r) {
+  ctx.beginPath();
+  ctx.moveTo(x + r, y);
+  ctx.arcTo(x + w, y, x + w, y + h, r);
+  ctx.arcTo(x + w, y + h, x, y + h, r);
+  ctx.arcTo(x, y + h, x, y, r);
+  ctx.arcTo(x, y, x + w, y, r);
+  ctx.closePath();
+}
+
+// Текст в точный бокс по чертежу (мм): высота знаков h, нижняя линия base,
+// горизонталь — либо центр cx, либо левый край x. k — сжатие по ширине.
+function capRatio(ctx, font = FONT) {
+  ctx.font = `${W} 100px ${font}`;
+  return ctx.measureText('H').actualBoundingBoxAscent / 100;
+}
+function measure(ctx, text, h, font = FONT) {
+  ctx.font = `${W} ${h / capRatio(ctx, font)}px ${font}`;
+  const m = ctx.measureText(text);
+  return { left: m.actualBoundingBoxLeft, width: m.actualBoundingBoxLeft + m.actualBoundingBoxRight };
+}
+// во сколько раз сжать шрифт, чтобы образец занял ширину refW, как на чертеже
+function kFor(ctx, sample, refW, h) {
+  return refW / measure(ctx, sample, h).width;
+}
+function boxText(ctx, text, { h, base, cx, x, k = 1, maxW = Infinity, font = FONT }) {
+  const m = measure(ctx, text, h, font);
+  k = Math.min(k, maxW / m.width);
+  const w = m.width * k;
+  const left = x !== undefined ? x : cx - w / 2;
+  ctx.save();
+  ctx.translate(left, base);
+  ctx.scale(k, 1);
+  ctx.fillText(text, m.left, 0);
+  ctx.restore();
+  return w;
+}
+
+const flagImg = new Image();
+const flagReady = new Promise((res) => { flagImg.onload = res; flagImg.onerror = res; });
+flagImg.src = 'img/flag.svg';
+
+function drawFlag(ctx, x, y, w, h) {
+  if (flagImg.complete && flagImg.naturalWidth) ctx.drawImage(flagImg, x, y, w, h);
+}
+
+// Рамка: тонкий внешний контур + толстая внутренняя рамка, как на чертеже
+function frame(ctx, w, h, sepX) {
+  roundRect(ctx, 0.5, 0.5, w - 1, h - 1, 9);
+  ctx.fillStyle = '#fff'; ctx.fill();
+  ctx.lineWidth = 1; ctx.strokeStyle = INK; ctx.stroke();
+  roundRect(ctx, 4.5, 4.5, w - 9, h - 9, 5.5);
+  ctx.lineWidth = 2.6; ctx.stroke();
+  ctx.fillStyle = INK;
+  ctx.fillRect(sepX - 1.3, 4.5, 2.6, h - 9);
+  ctx.textBaseline = 'alphabetic';
+}
+
+// Левый блок 140 мм (общий для всех форм 520×112): регион 48 мм, флаг 40×26 + KG 26 мм
+function leftBlock(ctx, region) {
+  boxText(ctx, region, { h: 48, base: 64, cx: 71, k: kFor(ctx, '01', 64, 48) });
+  drawFlag(ctx, 29, 70, 40, 26);
+  boxText(ctx, 'KG', { h: 26, base: 96, x: 74, k: kFor(ctx, 'KG', 39, 26) });
+}
+
+// Формы номера: все размеры в мм по чертежам
+const PLATE_TYPES = [
+  {
+    id: 'standard', w: 520, h: 112,
+    name: { ky: 'Стандарттык', ru: 'Стандартный' },
+    hint: { ky: '3 сан + 3 тамга', ru: '3 цифры + 3 буквы' },
+    sample: { digits: '777', letters: 'ABC' },
+    valid: (v) => /^\d{3}$/.test(v.digits) && /^[A-Z]{3}$/.test(v.letters),
+    label: (v) => `${v.digits} ${v.letters}`,
+    draw(ctx, { region, digits, letters }) {
+      frame(ctx, this.w, this.h, 140);
+      leftBlock(ctx, region);
+      // правый блок: цифры 75 мм, буквы 62 мм, общая нижняя линия
+      const kd = kFor(ctx, '5555', 203, 75), kl = kFor(ctx, 'M', 40, 62);
+      const gap = 18, base = 93.5, cx = 327;
+      const wd = measure(ctx, digits, 75, FONT_DATA).width * kd;
+      const wl = measure(ctx, letters, 62, FONT_DATA).width * kl;
+      const total = Math.min(wd + gap + wl, 355);
+      const f = total / (wd + gap + wl);
+      const x0 = cx - total / 2;
+      boxText(ctx, digits, { h: 75, base, x: x0, k: kd * f, font: FONT_DATA });
+      boxText(ctx, letters, { h: 62, base, x: x0 + (wd + gap) * f, k: kl * f, font: FONT_DATA });
+    },
+  },
+  {
+    id: 'named', w: 520, h: 112,
+    name: { ky: 'Аттуу номер', ru: 'Именной' },
+    hint: { ky: '7 белгиге чейин', ru: 'до 7 знаков' },
+    sample: { text: 'NOMERIM' },
+    valid: (v) => /^[A-Z0-9 ]{1,7}$/.test(v.text) && /[A-Z0-9]/.test(v.text),
+    label: (v) => v.text,
+    draw(ctx, { region, text }) {
+      frame(ctx, this.w, this.h, 140);
+      leftBlock(ctx, region);
+      // правый блок: текст до 75 мм по центру; длинный — уменьшается целиком, чтобы влезть
+      const k = kFor(ctx, '5555', 203, 75), maxW = 330;
+      const w75 = measure(ctx, text, 75, FONT_DATA).width * k;
+      const h = w75 > maxW ? 75 * maxW / w75 : 75;
+      boxText(ctx, text, { h, base: 56 + h / 2, cx: 327, k, font: FONT_DATA });
+    },
+  },
+];
+
+let typeId = 'standard';
+const currentType = () => PLATE_TYPES.find((t) => t.id === typeId);
+
+function render(canvas, type, data, scale) {
+  canvas.width = type.w * scale;
+  canvas.height = type.h * scale;
+  const ctx = canvas.getContext('2d');
+  ctx.setTransform(scale, 0, 0, scale, 0, 0);
+  type.draw(ctx, data);
+}
+
+function buildTypes() {
+  $('types').innerHTML = PLATE_TYPES.map((t) => `
+    <label class="type">
+      <input type="radio" name="type" value="${t.id}" ${t.id === typeId ? 'checked' : ''}>
+      <span class="type-thumb"><canvas data-thumb="${t.id}"></canvas></span>
+      <span class="type-name" data-type-name="${t.id}">${t.name[lang]}</span>
+      <span class="type-size" data-type-hint="${t.id}">${t.hint[lang]}</span>
+    </label>`).join('');
+  document.querySelectorAll('[data-thumb]').forEach((c) => {
+    const t = PLATE_TYPES.find((x) => x.id === c.dataset.thumb);
+    render(c, t, { region: '01', ...t.sample }, 2);
+  });
+  document.querySelectorAll('input[name=type]').forEach((r) => r.addEventListener('change', () => {
+    typeId = r.value;
+    $('form').dataset.type = typeId;
+    showPlate();
+  }));
+}
+
+const values = () => ({
+  digits: $('digits').value,
+  letters: $('letters').value,
+  text: $('text').value.trim().replace(/ +/g, ' '),
+});
+const isValid = () => currentType().valid(values());
+
+function drawPlate(region, data) {
+  const type = currentType();
+  render($('plate'), type, { region, ...data }, S);
+  $('plate').style.maxWidth = `${Math.round(type.w * 1.1)}px`;
+}
+
+// Номер перерисовывается сразу при вводе. Пока поля не заполнены — показывается пример.
+function showPlate() {
+  const type = currentType();
+  const region = $('region').value;
+  const ok = isValid();
+  const data = ok ? values() : type.sample;
+  drawPlate(region, data);
+  $('result').classList.toggle('is-sample', !ok);
+  $('plateLabel').textContent = ok ? I18N[lang].yourPlate : I18N[lang].sample;
+  $('plateText').textContent = `${region} KG ${type.label(data)}`;
+  $('regionName').textContent = REGIONS.find((x) => x.code === region)[lang];
+  $('download').disabled = !ok;
+  if (ok) $('error').textContent = '';
+}
+
+$('region').addEventListener('change', showPlate);
+$('form').addEventListener('submit', (e) => { e.preventDefault(); document.activeElement.blur(); });
+
+$('download').addEventListener('click', () => {
+  if (!isValid()) return;
+  const a = document.createElement('a');
+  const name = currentType().label(values()).replace(/ /g, '');
+  a.download = `nomerim-${$('region').value}-${name}.png`;
+  a.href = $('plate').toDataURL('image/png');
+  a.click();
+});
+
+buildTypes();
+setLang(lang);
+Promise.all([
+  document.fonts.load(`${W} 64px "Euro Plate"`).catch(() => {}),
+  document.fonts.load(`${W} 64px "Euro Plate Data"`).catch(() => {}),
+  flagReady,
+]).then(() => { buildTypes(); showPlate(); });
+</script>
+</body>
+</html>
