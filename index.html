@@ -134,6 +134,7 @@
 
   footer { color: var(--muted); font-size: 13px; padding: 20px 0; border-top: 1px solid var(--line); background: var(--card); }
 
+
   .type { min-width: 0; }
   input, select { min-width: 0; }
 
@@ -224,11 +225,11 @@
         </div>
         <div>
           <label for="letters" data-i18n="letters">3 тамга</label>
-          <input id="letters" maxlength="3" autocomplete="off" autocapitalize="characters" spellcheck="false" placeholder="ABC">
+          <input id="letters" lang="en" maxlength="3" autocomplete="off" autocapitalize="characters" spellcheck="false" placeholder="ABC">
         </div>
         <div class="f-text">
           <label for="text" data-i18n="text">Текст (7 белгиге чейин)</label>
-          <input id="text" maxlength="7" autocomplete="off" autocapitalize="characters" spellcheck="false" placeholder="NOMERIM">
+          <input id="text" lang="en" maxlength="7" autocomplete="off" autocapitalize="characters" spellcheck="false" placeholder="NOMERIM">
         </div>
       </form>
       <p class="error" id="error"></p>
@@ -262,7 +263,7 @@ const I18N = {
     region: 'Аймагы', digits: '3 сан', letters: '3 тамга', text: 'Текст (7 белгиге чейин)',
     yourPlate: 'Сиздин номер:', sample: 'Мисал:', download: 'PNG жүктөө',
     footer: 'Бул сайт номердин сырткы көрүнүшүн гана көрсөтөт. Маалымат базасы жок.',
-    errDigits: '3 сан териңиз (0–9)', errLetters: '3 латын тамгасын териңиз (A–Z)',
+    errLatin: 'Латын тамгалары гана (A–Z)',
   },
   ru: {
     brand: 'Номерим', title: 'Конструктор номера',
@@ -271,12 +272,10 @@ const I18N = {
     region: 'Регион', digits: '3 цифры', letters: '3 буквы', text: 'Текст (до 7 знаков)',
     yourPlate: 'Ваш номер:', sample: 'Пример:', download: 'Скачать PNG',
     footer: 'Сайт только показывает, как будет выглядеть номер. Базы данных нет.',
-    errDigits: 'Введите 3 цифры (0–9)', errLetters: 'Введите 3 латинские буквы (A–Z)',
+    errLatin: 'Только латинские буквы (A–Z)',
   },
 };
 
-// Кириллица, похожая на латиницу, автоматически заменяется
-const CYR_TO_LAT = { 'А':'A','В':'B','Е':'E','К':'K','М':'M','Н':'H','О':'O','Р':'P','С':'C','Т':'T','У':'Y','Х':'X' };
 
 const $ = (id) => document.getElementById(id);
 let lang = 'ky';
@@ -310,19 +309,22 @@ $('digits').addEventListener('input', (e) => {
   if (e.target.value.length === 3) $('letters').focus();
   showPlate();
 });
-$('letters').addEventListener('input', (e) => {
-  e.target.value = e.target.value.toUpperCase()
-    .replace(/./g, (c) => CYR_TO_LAT[c] || c)
-    .replace(/[^A-Z]/g, '').slice(0, 3);
-  e.target.classList.remove('invalid');
-  if (e.target.value.length === 3) e.target.blur();
+// Принимаются только латинские буквы: кириллица и прочие символы не вводятся, показывается подсказка
+function latinOnly(input, allowed, clean) {
+  const raw = input.value.toUpperCase();
+  const rejected = /[^\x00-\x7F]/.test(raw) || /\p{L}/u.test(raw.replace(/[A-Z]/g, ''));
+  input.value = clean(raw.replace(allowed, ''));
   showPlate();
+  input.classList.toggle('invalid', rejected);
+  $('error').textContent = rejected ? I18N[lang].errLatin : '';
+}
+
+$('letters').addEventListener('input', (e) => {
+  latinOnly(e.target, /[^A-Z]/g, (v) => v.slice(0, 3));
+  if (e.target.value.length === 3) e.target.blur();
 });
 $('text').addEventListener('input', (e) => {
-  e.target.value = e.target.value.toUpperCase()
-    .replace(/./g, (c) => CYR_TO_LAT[c] || c)
-    .replace(/[^A-Z0-9 ]/g, '').replace(/^ +/, '').replace(/ {2,}/g, ' ').slice(0, 7);
-  showPlate();
+  latinOnly(e.target, /[^A-Z0-9 ]/g, (v) => v.replace(/^ +/, '').replace(/ {2,}/g, ' ').slice(0, 7));
 });
 
 // ---------- Рисование номера (размер 520×112 мм, масштаб 2) ----------
@@ -466,6 +468,8 @@ function buildTypes() {
   document.querySelectorAll('input[name=type]').forEach((r) => r.addEventListener('change', () => {
     typeId = r.value;
     $('form').dataset.type = typeId;
+    $('error').textContent = '';
+    document.querySelectorAll('#form .invalid').forEach((el) => el.classList.remove('invalid'));
     showPlate();
   }));
 }
