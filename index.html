@@ -229,7 +229,7 @@
         </div>
         <div class="f-text">
           <label for="text" data-i18n="text">Текст (7 белгиге чейин)</label>
-          <input id="text" lang="en" maxlength="7" autocomplete="off" autocapitalize="characters" spellcheck="false" placeholder="NOMERIM">
+          <input id="text" lang="en" maxlength="7" autocomplete="off" autocorrect="off" autocapitalize="characters" spellcheck="false" placeholder="NOMERIM">
         </div>
       </form>
       <p class="error" id="error"></p>
@@ -324,6 +324,8 @@ $('letters').addEventListener('input', (e) => {
   if (e.target.value.length === 3) e.target.blur();
 });
 $('text').addEventListener('input', (e) => {
+  // Клавиатура телефона превращает двойной пробел в «. » — возвращаем точку обратно в пробел
+  e.target.value = e.target.value.replace(/\./g, ' ');
   latinOnly(e.target, /[^A-Z0-9 ]/g, (v) => v.slice(0, 7)); // всего 7 символов вместе с пробелами
 });
 
