@@ -434,16 +434,24 @@ const PLATE_TYPES = [
     draw(ctx, { region, text }) {
       frame(ctx, this.w, this.h, 140);
       leftBlock(ctx, region);
-      // пробелы считаются и видны: в начале/конце сдвигают надпись, внутри — раздвигают
-      const body = text.trim();
-      if (!body) return;
-      const lead = text.length - text.trimStart().length, trail = text.length - text.trimEnd().length;
+      // пробел занимает место как целый знак (ширина «0»), а не узкий пробел шрифта;
+      // пробелы в начале/конце тоже считаются, вся строка — по центру правого блока
+      if (!text.trim()) return;
       const k = kFor(ctx, '5555', 203, 75), maxW = 330;
-      const spaceW = (hh) => { measure(ctx, ' ', hh, FONT_DATA); return ctx.measureText(' ').width * k; };
-      const full = (hh) => measure(ctx, body, hh, FONT_DATA).width * k + (lead + trail) * spaceW(hh);
-      const h = full(75) > maxW ? 75 * maxW / full(75) : 75;
-      const cx = 327 + (lead - trail) * spaceW(h) / 2;
-      boxText(ctx, body, { h, base: 56 + h / 2, cx, k, font: FONT_DATA });
+      const layout = (h) => {
+        ctx.font = `${W} ${h / capRatio(ctx, FONT_DATA)}px ${FONT_DATA}`;
+        const cell = ctx.measureText('0').width;
+        const adv = [...text].map((c) => (c === ' ' ? cell : ctx.measureText(c).width));
+        return { adv, width: adv.reduce((x, y) => x + y, 0) * k };
+      };
+      let h = 75, l = layout(h);
+      if (l.width > maxW) { h = 75 * maxW / l.width; l = layout(h); }
+      ctx.save();
+      ctx.translate(327 - l.width / 2, 56 + h / 2);
+      ctx.scale(k, 1);
+      let x = 0;
+      [...text].forEach((c, i) => { if (c !== ' ') ctx.fillText(c, x, 0); x += l.adv[i]; });
+      ctx.restore();
     },
   },
 ];
