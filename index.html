@@ -505,9 +505,19 @@ function drawPlate(region, data) {
   $('plate').style.maxWidth = `${Math.round(type.w * 1.1)}px`;
 }
 
-// Статистика в Vercel Web Analytics: сам текст номера не отправляется, только тип и регион.
-const track = (name, data) => window.va('event', { name, data });
+// Счётчик (api/track): сам текст номера не отправляется, только тип и регион.
+function track(event, data = {}) {
+  const body = JSON.stringify({ event, ...data });
+  if (!navigator.sendBeacon?.('/api/track', body)) fetch('/api/track', { method: 'POST', body, keepalive: true }).catch(() => {});
+}
 const filled = new Set();
+track('visit');
+try {
+  if (!localStorage.getItem('nomerim-visitor')) {
+    localStorage.setItem('nomerim-visitor', '1');
+    track('visitor');
+  }
+} catch {}
 
 // Номер перерисовывается сразу при вводе. Пока поля не заполнены — показывается пример.
 function showPlate() {
