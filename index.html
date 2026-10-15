@@ -13,6 +13,8 @@
 <meta property="og:description" content="Аймакты, сан жана тамгаларды тандап, мамлекеттик номер кандай көрүнөрүн көрүңүз. Посмотрите, как будет выглядеть ваш госномер KG.">
 <meta property="og:locale" content="ky_KG">
 <meta property="og:locale:alternate" content="ru_RU">
+<script>window.va = window.va || function () { (window.vaq = window.vaq || []).push(arguments); };</script>
+<script defer src="/_vercel/insights/script.js"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
@@ -503,6 +505,10 @@ function drawPlate(region, data) {
   $('plate').style.maxWidth = `${Math.round(type.w * 1.1)}px`;
 }
 
+// Статистика в Vercel Web Analytics: сам текст номера не отправляется, только тип и регион.
+const track = (name, data) => window.va('event', { name, data });
+const filled = new Set();
+
 // Номер перерисовывается сразу при вводе. Пока поля не заполнены — показывается пример.
 function showPlate() {
   const type = currentType();
@@ -516,6 +522,10 @@ function showPlate() {
   $('regionName').textContent = REGIONS.find((x) => x.code === region)[lang];
   $('download').disabled = !ok;
   if (ok) $('error').textContent = '';
+  if (ok && !filled.has(type.id)) {
+    filled.add(type.id);
+    track('plate_filled', { type: type.id, region });
+  }
 }
 
 $('region').addEventListener('change', showPlate);
@@ -528,6 +538,7 @@ $('download').addEventListener('click', () => {
   a.download = `nomerim-${$('region').value}-${name}.png`;
   a.href = $('plate').toDataURL('image/png');
   a.click();
+  track('plate_download', { type: currentType().id, region: $('region').value });
 });
 
 buildTypes();
