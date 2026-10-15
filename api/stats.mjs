@@ -25,6 +25,7 @@ const toObj = (arr) => {
   for (let i = 0; i < (arr || []).length; i += 2) o[arr[i]] = Number(arr[i + 1]);
   return o;
 };
+const PARTNER = 'softech.kg';
 const esc = (s) => String(s).replace(/[&<>"]/g, (c) => `&#${c.charCodeAt(0)};`);
 const n = (v) => (v || 0).toLocaleString('ru-RU');
 
@@ -41,15 +42,23 @@ export async function GET(request) {
     ['HGETALL', 'stats:total'],
     ['HGETALL', 'stats:filled:type'], ['HGETALL', 'stats:downloads:type'],
     ['HGETALL', 'stats:filled:region'], ['HGETALL', 'stats:downloads:region'],
+    ['HGETALL', 'stats:source'],
     ...days.map((d) => ['HGETALL', `stats:day:${d}`]),
+    ...days.map((d) => ['HGETALL', `stats:source:${d}`]),
   ]);
-  const [total, fType, dType, fRegion, dRegion, ...perDay] = res.map(toObj);
+  const [total, fType, dType, fRegion, dRegion, sources, ...rest] = res.map(toObj);
+  const perDay = rest.slice(0, days.length);
+  const perDaySource = rest.slice(days.length);
 
   const cards = FIELDS.map(([k, label]) => `<div class="card"><b>${n(total[k])}</b><span>${label}</span></div>`).join('');
   const table = (title, names, f, d) => `<h2>${title}</h2><table><tr><th></th><th>Заполнили</th><th>Скачали</th></tr>${
     Object.entries(names).map(([k, label]) => `<tr><td>${esc(label)}</td><td>${n(f[k])}</td><td>${n(d[k])}</td></tr>`).join('')}</table>`;
-  const daily = `<h2>По дням (14 дней)</h2><table><tr><th></th>${FIELDS.map(([, l]) => `<th>${l}</th>`).join('')}</tr>${
-    days.map((d, i) => `<tr><td>${d}</td>${FIELDS.map(([k]) => `<td>${n(perDay[i][k])}</td>`).join('')}</tr>`).join('')}</table>`;
+  const daily = `<h2>По дням (14 дней)</h2><table><tr><th></th>${FIELDS.map(([, l]) => `<th>${l}</th>`).join('')}<th>С ${PARTNER}</th></tr>${
+    days.map((d, i) => `<tr><td>${d}</td>${FIELDS.map(([k]) => `<td>${n(perDay[i][k])}</td>`).join('')}<td>${n(perDaySource[i][PARTNER])}</td></tr>`).join('')}</table>`;
+  const sourceRows = Object.entries(sources).sort((a, b) => b[1] - a[1]).slice(0, 20);
+  const from = `<h2>Откуда пришли (заходы)</h2><table><tr><th></th><th>Заходы</th></tr>${
+    sourceRows.map(([k, v]) => `<tr><td>${k === 'direct' ? 'Напрямую' : esc(k)}</td><td>${n(v)}</td></tr>`).join('')
+    || '<tr><td>Пока нет данных</td><td></td></tr>'}</table>`;
 
   const html = `<!doctype html><html lang="ru"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="robots" content="noindex"><title>Номерим — статистика</title>
@@ -67,6 +76,7 @@ export async function GET(request) {
   th { color: #6b7280; font-weight: 500; }
 </style></head><body><main><h1>Статистика Номерим</h1>
 <div class="cards">${cards}</div>
+${from}
 ${table('По типу номера', TYPES, fType, dType)}
 ${table('По региону', REGIONS, fRegion, dRegion)}
 ${daily}

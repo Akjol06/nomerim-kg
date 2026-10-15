@@ -511,7 +511,24 @@ function track(event, data = {}) {
   if (!navigator.sendBeacon?.('/api/track', body)) fetch('/api/track', { method: 'POST', body, keepalive: true }).catch(() => {});
 }
 const filled = new Set();
-track('visit');
+// Откуда пришли: ?from=... в ссылке (надёжнее) или сайт-реферер.
+function source() {
+  const params = new URLSearchParams(location.search);
+  const from = params.get('from') || params.get('utm_source');
+  if (from) {
+    params.delete('from');
+    params.delete('utm_source');
+    const q = params.toString();
+    history.replaceState(null, '', location.pathname + (q ? `?${q}` : '') + location.hash);
+    return from;
+  }
+  try {
+    const host = new URL(document.referrer).hostname;
+    if (host !== location.hostname) return host;
+  } catch {}
+  return '';
+}
+track('visit', { source: source() });
 try {
   if (!localStorage.getItem('nomerim-visitor')) {
     localStorage.setItem('nomerim-visitor', '1');

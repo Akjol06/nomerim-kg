@@ -13,6 +13,12 @@ export async function POST(request) {
     ['HINCRBY', 'stats:total', field, 1],
     ['HINCRBY', `stats:day:${day()}`, field, 1],
   ];
+  if (field === 'visits') {
+    const source = String(body.source || '').toLowerCase().replace(/^www\./, '').slice(0, 60) || 'direct';
+    if (/^[a-z0-9.-]+$/.test(source)) {
+      cmds.push(['HINCRBY', 'stats:source', source, 1], ['HINCRBY', `stats:source:${day()}`, source, 1]);
+    }
+  }
   // Сам текст номера не сохраняется — только тип и регион.
   if (field === 'filled' || field === 'downloads') {
     const { type, region } = body;
